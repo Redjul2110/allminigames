@@ -1,1 +1,805 @@
+<!doctype html>
+<html lang="de" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Calculator Hub</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Space Grotesk', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d0d1f 100%);
+    }
+    
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .glow-purple {
+      box-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+    }
+    
+    .glow-cyan {
+      box-shadow: 0 0 30px rgba(6, 182, 212, 0.25);
+    }
+    
+    .glow-green {
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
+    }
+    
+    .tab-active {
+      background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+      color: white;
+    }
+    
+    .input-glow:focus {
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+      border-color: #8b5cf6;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+    }
+    
+    .stock-up { color: #10b981; }
+    .stock-down { color: #ef4444; }
+    
+    .pulse-dot {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .slide-in {
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    
+    input[type="range"]::-webkit-slider-track {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+      border-radius: 50%;
+      cursor: pointer;
+      margin-top: -7px;
+    }
+    
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      border: none;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .result-card {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    
+    .calc-button {
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+    }
+    
+    .calc-button:hover {
+      background: rgba(139, 92, 246, 0.3);
+      border-color: rgba(139, 92, 246, 0.5);
+    }
+    
+    .calc-button.operator {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.3));
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full gradient-bg text-white overflow-auto">
+  <div class="min-h-full p-4 md:p-8"><!-- Header -->
+   <header class="text-center mb-8">
+    <div class="inline-flex items-center gap-3 mb-2">
+     <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+     </div>
+     <h1 id="main-title" class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">Advanced Calculator Hub</h1>
+    </div>
+    <p id="tagline" class="text-gray-400 text-sm">Alle Tools an einem Ort • Live-Daten • Schnelle Berechnungen</p>
+   </header><!-- Tab Navigation -->
+   <nav class="flex flex-wrap justify-center gap-2 mb-8"><button onclick="switchTab('stocks')" id="tab-stocks" class="tab-active px-4 py-2 rounded-full text-sm font-medium transition-all"> 📈 Aktien </button> <button onclick="switchTab('currency')" id="tab-currency" class="glass px-4 py-2 rounded-full text-sm font-medium text-gray-300 hover:text-white transition-all"> 💱 Währung </button> <button onclick="switchTab('units')" id="tab-units" class="glass px-4 py-2 rounded-full text-sm font-medium text-gray-300 hover:text-white transition-all"> 📐 Einheiten </button> <button onclick="switchTab('crypto')" id="tab-crypto" class="glass px-4 py-2 rounded-full text-sm font-medium text-gray-300 hover:text-white transition-all"> ₿ Krypto </button> <button onclick="switchTab('calculator')" id="tab-calculator" class="glass px-4 py-2 rounded-full text-sm font-medium text-gray-300 hover:text-white transition-all"> 🧮 Rechner </button> <button onclick="switchTab('tools')" id="tab-tools" class="glass px-4 py-2 rounded-full text-sm font-medium text-gray-300 hover:text-white transition-all"> 🛠️ Tools </button>
+   </nav><!-- Content Container -->
+   <main class="max-w-4xl mx-auto"><!-- Stocks Tab -->
+    <section id="content-stocks" class="slide-in">
+     <div class="glass rounded-3xl p-6 md:p-8 glow-cyan">
+      <div class="flex items-center justify-between mb-6">
+       <h2 class="text-xl font-bold flex items-center gap-2">📈 Live Aktienkurse <span class="pulse-dot w-2 h-2 bg-green-400 rounded-full"></span></h2><button onclick="refreshStocks()" class="glass px-3 py-1 rounded-lg text-sm hover:bg-white/10 transition"> 🔄 Aktualisieren </button>
+      </div>
+      <div id="stocks-list" class="space-y-3 mb-6">
+       <p class="text-gray-400">Laden...</p>
+      </div><!-- Stock Search -->
+      <div class="pt-6 border-t border-white/10"><label class="text-gray-300 font-medium block mb-2">🔍 Nach Symbol suchen</label>
+       <div class="flex gap-2 mb-4"><input type="text" id="stock-search" placeholder="z.B. AAPL, MSFT, SAP" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 input-glow focus:outline-none transition uppercase"> <button onclick="searchStock()" class="btn-primary px-6 py-3 rounded-xl font-medium"> Suchen </button>
+       </div>
+       <div id="search-result"></div>
+      </div>
+     </div>
+    </section><!-- Currency Tab -->
+    <section id="content-currency" class="hidden slide-in">
+     <div class="glass rounded-3xl p-6 md:p-8 glow-cyan">
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">💱 Echtzeit-Währungsrechner</h2>
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+       <div><label class="text-gray-300 font-medium block mb-2">Betrag</label> <input type="number" id="currency-amount" value="100" step="0.01" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-xl mono input-glow focus:outline-none transition" oninput="convertCurrency()">
+       </div>
+       <div><label class="text-gray-300 font-medium block mb-2">Von</label> <select id="currency-from" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="convertCurrency()"> <option value="EUR">🇪🇺 EUR - Euro</option> <option value="USD">🇺🇸 USD - US Dollar</option> <option value="GBP">🇬🇧 GBP - Britisches Pfund</option> <option value="CHF">🇨🇭 CHF - Schweizer Franken</option> <option value="JPY">🇯🇵 JPY - Japanischer Yen</option> <option value="CAD">🇨🇦 CAD - Kanadischer Dollar</option> <option value="AUD">🇦🇺 AUD - Australischer Dollar</option> <option value="SEK">🇸🇪 SEK - Schwedische Krone</option> <option value="NOK">🇳🇴 NOK - Norwegische Krone</option> </select>
+       </div>
+      </div>
+      <div class="flex justify-center my-4"><button onclick="swapCurrencies()" class="glass w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition text-xl"> ⇅ </button>
+      </div>
+      <div class="mb-6"><label class="text-gray-300 font-medium block mb-2">Nach</label> <select id="currency-to" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="convertCurrency()"> <option value="USD">🇺🇸 USD - US Dollar</option> <option value="EUR">🇪🇺 EUR - Euro</option> <option value="GBP">🇬🇧 GBP - Britisches Pfund</option> <option value="CHF">🇨🇭 CHF - Schweizer Franken</option> <option value="JPY">🇯🇵 JPY - Japanischer Yen</option> <option value="CAD">🇨🇦 CAD - Kanadischer Dollar</option> <option value="AUD">🇦🇺 AUD - Australischer Dollar</option> <option value="SEK">🇸🇪 SEK - Schwedische Krone</option> <option value="NOK">🇳🇴 NOK - Norwegische Krone</option> </select>
+      </div>
+      <div class="result-card rounded-2xl p-6 text-center">
+       <p class="text-gray-400 text-sm mb-2">Ergebnis</p>
+       <p id="currency-result" class="text-4xl font-bold bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent mono">108.50 USD</p>
+       <p id="currency-rate" class="text-gray-500 text-sm mt-2">1 EUR = 1.085 USD</p>
+      </div>
+     </div>
+    </section><!-- Units Tab -->
+    <section id="content-units" class="hidden slide-in">
+     <div class="glass rounded-3xl p-6 md:p-8 glow-cyan">
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">📐 Einheitenrechner</h2>
+      <div class="mb-6"><label class="text-gray-300 font-medium block mb-2">Kategorie</label> <select id="unit-category" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="updateUnitOptions()"> <option value="length">📏 Länge</option> <option value="weight">⚖️ Gewicht</option> <option value="temperature">🌡️ Temperatur</option> <option value="area">📐 Fläche</option> <option value="volume">🧪 Volumen</option> <option value="speed">🚗 Geschwindigkeit</option> <option value="energy">⚡ Energie</option> </select>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+       <div><label class="text-gray-300 font-medium block mb-2">Wert</label> <input type="number" id="unit-value" value="1" step="0.01" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="convertUnits()">
+       </div>
+       <div><label class="text-gray-300 font-medium block mb-2">Von</label> <select id="unit-from" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="convertUnits()"> </select>
+       </div>
+      </div>
+      <div class="mb-6"><label class="text-gray-300 font-medium block mb-2">Nach</label> <select id="unit-to" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="convertUnits()"> </select>
+      </div>
+      <div class="result-card rounded-2xl p-6 text-center">
+       <p class="text-gray-400 text-sm mb-2">Ergebnis</p>
+       <p id="unit-result" class="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mono">100 cm</p>
+      </div>
+     </div>
+    </section><!-- Crypto Tab -->
+    <section id="content-crypto" class="hidden slide-in">
+     <div class="glass rounded-3xl p-6 md:p-8 glow-green">
+      <div class="flex items-center justify-between mb-6">
+       <h2 class="text-xl font-bold flex items-center gap-2">₿ Kryptowährungen <span class="pulse-dot w-2 h-2 bg-yellow-400 rounded-full"></span></h2><button onclick="refreshCrypto()" class="glass px-3 py-1 rounded-lg text-sm hover:bg-white/10 transition"> 🔄 Aktualisieren </button>
+      </div>
+      <div id="crypto-list" class="space-y-3 mb-6">
+       <p class="text-gray-400">Laden...</p>
+      </div><!-- Crypto Converter -->
+      <div class="pt-6 border-t border-white/10">
+       <h3 class="font-medium mb-4">Krypto-Umrechner</h3>
+       <div class="grid md:grid-cols-3 gap-4">
+        <div><label class="text-gray-300 text-sm block mb-2">Menge</label> <input type="number" id="crypto-amount" value="1" step="0.0001" min="0" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="convertCrypto()">
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Von</label> <select id="crypto-from" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="convertCrypto()"> <option value="BTC">₿ Bitcoin</option> <option value="ETH">Ξ Ethereum</option> <option value="XRP">XRP Ripple</option> <option value="ADA">ADA Cardano</option> </select>
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Nach</label> <select id="crypto-to" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="convertCrypto()"> <option value="USD">USD</option> <option value="EUR">EUR</option> <option value="BTC">BTC</option> <option value="ETH">ETH</option> </select>
+        </div>
+       </div>
+       <div class="result-card rounded-2xl p-6 mt-4 text-center">
+        <p class="text-gray-400 text-sm mb-2">Krypto-Wert</p>
+        <p id="crypto-result" class="text-3xl font-bold text-yellow-400 mono">47,500 USD</p>
+       </div>
+      </div>
+     </div>
+    </section><!-- Calculator Tab -->
+    <section id="content-calculator" class="hidden slide-in">
+     <div class="glass rounded-3xl p-6 md:p-8">
+      <h2 class="text-xl font-bold mb-6 flex items-center gap-2">🧮 Wissenschaftlicher Taschenrechner</h2>
+      <div class="result-card rounded-2xl p-6 mb-6 text-right">
+       <p class="text-gray-400 text-sm mb-2">Eingabe</p>
+       <p id="calc-display" class="text-5xl font-bold text-cyan-400 mono break-words">0</p>
+      </div>
+      <div class="grid grid-cols-4 gap-2"><!-- Row 1 --> <button onclick="calcClear()" class="calc-button rounded-xl py-4 font-bold text-lg">C</button> <button onclick="calcDelete()" class="calc-button rounded-xl py-4 font-bold text-lg">DEL</button> <button onclick="calcPercent()" class="calc-button operator rounded-xl py-4 font-bold text-lg">%</button> <button onclick="calcOperate('/')" class="calc-button operator rounded-xl py-4 font-bold text-lg">÷</button> <!-- Row 2 --> <button onclick="calcNumber('7')" class="calc-button rounded-xl py-4 font-bold text-lg">7</button> <button onclick="calcNumber('8')" class="calc-button rounded-xl py-4 font-bold text-lg">8</button> <button onclick="calcNumber('9')" class="calc-button rounded-xl py-4 font-bold text-lg">9</button> <button onclick="calcOperate('*')" class="calc-button operator rounded-xl py-4 font-bold text-lg">×</button> <!-- Row 3 --> <button onclick="calcNumber('4')" class="calc-button rounded-xl py-4 font-bold text-lg">4</button> <button onclick="calcNumber('5')" class="calc-button rounded-xl py-4 font-bold text-lg">5</button> <button onclick="calcNumber('6')" class="calc-button rounded-xl py-4 font-bold text-lg">6</button> <button onclick="calcOperate('-')" class="calc-button operator rounded-xl py-4 font-bold text-lg">−</button> <!-- Row 4 --> <button onclick="calcNumber('1')" class="calc-button rounded-xl py-4 font-bold text-lg">1</button> <button onclick="calcNumber('2')" class="calc-button rounded-xl py-4 font-bold text-lg">2</button> <button onclick="calcNumber('3')" class="calc-button rounded-xl py-4 font-bold text-lg">3</button> <button onclick="calcOperate('+')" class="calc-button operator rounded-xl py-4 font-bold text-lg">+</button> <!-- Row 5 --> <button onclick="calcNumber('0')" class="calc-button rounded-xl py-4 font-bold text-lg col-span-2">0</button> <button onclick="calcNumber('.')" class="calc-button rounded-xl py-4 font-bold text-lg">.</button> <button onclick="calcEquals()" class="btn-primary rounded-xl py-4 font-bold text-lg">=</button>
+      </div><!-- Scientific Functions -->
+      <div class="mt-6 pt-6 border-t border-white/10">
+       <p class="text-gray-300 font-medium mb-3">Erweiterte Funktionen</p>
+       <div class="grid grid-cols-2 md:grid-cols-4 gap-2"><button onclick="calcFunction('sqrt')" class="calc-button rounded-xl py-2 text-sm font-medium">√</button> <button onclick="calcFunction('pow')" class="calc-button rounded-xl py-2 text-sm font-medium">x²</button> <button onclick="calcFunction('pow3')" class="calc-button rounded-xl py-2 text-sm font-medium">x³</button> <button onclick="calcFunction('sin')" class="calc-button rounded-xl py-2 text-sm font-medium">sin</button> <button onclick="calcFunction('cos')" class="calc-button rounded-xl py-2 text-sm font-medium">cos</button> <button onclick="calcFunction('tan')" class="calc-button rounded-xl py-2 text-sm font-medium">tan</button> <button onclick="calcFunction('log')" class="calc-button rounded-xl py-2 text-sm font-medium">log</button> <button onclick="calcFunction('pi')" class="calc-button rounded-xl py-2 text-sm font-medium">π</button>
+       </div>
+      </div>
+     </div>
+    </section><!-- Tools Tab -->
+    <section id="content-tools" class="hidden slide-in">
+     <div class="space-y-6"><!-- BMI Calculator -->
+      <div class="glass rounded-3xl p-6 md:p-8 glow-purple">
+       <h3 class="text-lg font-bold mb-4 flex items-center gap-2">⚖️ BMI Rechner</h3>
+       <div class="grid md:grid-cols-3 gap-4">
+        <div><label class="text-gray-300 text-sm block mb-2">Größe (cm)</label> <input type="number" id="bmi-height" value="170" min="100" max="300" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="calculateBMI()">
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Gewicht (kg)</label> <input type="number" id="bmi-weight" value="70" min="20" max="500" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="calculateBMI()">
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">BMI</label>
+         <div class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono font-bold text-center">
+          <p id="bmi-result">24.2</p>
+         </div>
+        </div>
+       </div>
+       <p id="bmi-category" class="text-center text-gray-400 text-sm mt-2">Normalgewicht</p>
+      </div><!-- Interest Calculator -->
+      <div class="glass rounded-3xl p-6 md:p-8">
+       <h3 class="text-lg font-bold mb-4 flex items-center gap-2">💰 Zinsrechner</h3>
+       <div class="grid md:grid-cols-4 gap-4">
+        <div><label class="text-gray-300 text-sm block mb-2">Kapital (€)</label> <input type="number" id="interest-principal" value="10000" step="100" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="calculateInterest()">
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Zinssatz (%)</label> <input type="number" id="interest-rate" value="3.5" step="0.1" min="0" max="100" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="calculateInterest()">
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Jahre</label> <input type="number" id="interest-years" value="5" min="1" max="100" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="calculateInterest()">
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Endwert</label>
+         <div class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono font-bold text-center">
+          <p id="interest-result">11,877 €</p>
+         </div>
+        </div>
+       </div>
+      </div><!-- Percentage Calculator -->
+      <div class="glass rounded-3xl p-6 md:p-8">
+       <h3 class="text-lg font-bold mb-4 flex items-center gap-2">📊 Prozentrechner</h3>
+       <div class="grid md:grid-cols-3 gap-4">
+        <div><label class="text-gray-300 text-sm block mb-2">Wert</label> <input type="number" id="percent-value" value="100" step="0.01" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="calculatePercent()">
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Prozent (%)</label> <input type="number" id="percent-percent" value="20" step="0.1" min="0" max="100" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono input-glow focus:outline-none transition" oninput="calculatePercent()">
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Ergebnis</label>
+         <div class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mono font-bold text-center">
+          <p id="percent-result">20</p>
+         </div>
+        </div>
+       </div>
+      </div><!-- Timezone Converter -->
+      <div class="glass rounded-3xl p-6 md:p-8">
+       <h3 class="text-lg font-bold mb-4 flex items-center gap-2">⏱️ Zeitzonen-Umrechner</h3>
+       <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="text-gray-300 text-sm block mb-2">Zeitzone 1</label> <select id="tz-from" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="convertTimezone()"> <option value="0">GMT ±0</option> <option value="1">CET +1 (Deutschland)</option> <option value="2">EET +2 (Ost-Europa)</option> <option value="-5">EST -5 (New York)</option> <option value="-8">PST -8 (Los Angeles)</option> <option value="8">CST +8 (Shanghai)</option> <option value="9">JST +9 (Tokyo)</option> <option value="10">AEST +10 (Sydney)</option> </select>
+        </div>
+        <div><label class="text-gray-300 text-sm block mb-2">Zeitzone 2</label> <select id="tz-to" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white input-glow focus:outline-none transition" onchange="convertTimezone()"> <option value="0">GMT ±0</option> <option value="1">CET +1 (Deutschland)</option> <option value="2">EET +2 (Ost-Europa)</option> <option value="-5">EST -5 (New York)</option> <option value="-8">PST -8 (Los Angeles)</option> <option value="8">CST +8 (Shanghai)</option> <option value="9">JST +9 (Tokyo)</option> <option value="10">AEST +10 (Sydney)</option> </select>
+        </div>
+       </div>
+       <div id="tz-result" class="mt-4 text-center text-gray-300"></div>
+      </div>
+     </div>
+    </section>
+   </main><!-- Footer -->
+   <footer class="text-center mt-8 text-gray-500 text-sm">
+    <p>Advanced Calculator Hub • Demo-Daten • Alle Berechnungen lokal</p>
+   </footer>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      app_title: 'Advanced Calculator Hub',
+      tagline: 'Alle Tools an einem Ort • Live-Daten • Schnelle Berechnungen'
+    };
 
+    let config = { ...defaultConfig };
+
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (newConfig) => {
+          config = { ...defaultConfig, ...newConfig };
+          document.getElementById('main-title').textContent = config.app_title || defaultConfig.app_title;
+          document.getElementById('tagline').textContent = config.tagline || defaultConfig.tagline;
+        },
+        mapToCapabilities: (cfg) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (cfg) => new Map([
+          ['app_title', cfg.app_title || defaultConfig.app_title],
+          ['tagline', cfg.tagline || defaultConfig.tagline]
+        ])
+      });
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+      const tabs = ['stocks', 'currency', 'units', 'crypto', 'calculator', 'tools'];
+      tabs.forEach(t => {
+        document.getElementById(`tab-${t}`).classList.remove('tab-active');
+        document.getElementById(`tab-${t}`).classList.add('glass', 'text-gray-300');
+        document.getElementById(`content-${t}`).classList.add('hidden');
+      });
+      
+      document.getElementById(`tab-${tab}`).classList.add('tab-active');
+      document.getElementById(`tab-${tab}`).classList.remove('glass', 'text-gray-300');
+      document.getElementById(`content-${tab}`).classList.remove('hidden');
+      
+      if (tab === 'stocks') refreshStocks();
+      if (tab === 'currency') convertCurrency();
+      if (tab === 'units') updateUnitOptions();
+      if (tab === 'crypto') refreshCrypto();
+      if (tab === 'tools') {
+        calculateBMI();
+        calculateInterest();
+        calculatePercent();
+        convertTimezone();
+      }
+    }
+
+    // Stock data
+    const stockData = {
+      'AAPL': { name: 'Apple Inc.', price: 178.52, change: 2.34 },
+      'GOOGL': { name: 'Alphabet Inc.', price: 141.80, change: -0.87 },
+      'MSFT': { name: 'Microsoft Corp.', price: 378.91, change: 4.52 },
+      'AMZN': { name: 'Amazon.com Inc.', price: 178.25, change: 1.23 },
+      'TSLA': { name: 'Tesla Inc.', price: 248.50, change: -3.21 },
+      'NVDA': { name: 'NVIDIA Corp.', price: 495.22, change: 12.45 },
+      'META': { name: 'Meta Platforms', price: 505.34, change: 5.67 },
+      'SAP': { name: 'SAP SE', price: 183.45, change: 1.89 },
+      'BMW': { name: 'BMW AG', price: 98.76, change: -0.45 },
+      'SIE': { name: 'Siemens AG', price: 167.23, change: 2.11 },
+      'ASML': { name: 'ASML Holding', price: 612.45, change: 8.90 },
+      'NOVO': { name: 'Novo Nordisk', price: 87.32, change: -1.23 }
+    };
+
+    function refreshStocks() {
+      const container = document.getElementById('stocks-list');
+      container.innerHTML = '';
+      
+      const mainStocks = ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'SAP', 'BMW', 'ASML', 'NOVO'];
+      
+      mainStocks.forEach((symbol, index) => {
+        const stock = stockData[symbol];
+        const variation = (Math.random() - 0.5) * 2;
+        const currentPrice = (stock.price + variation).toFixed(2);
+        const change = (stock.change + variation * 0.5).toFixed(2);
+        const isUp = parseFloat(change) >= 0;
+        
+        const div = document.createElement('div');
+        div.className = 'glass rounded-xl p-4 flex justify-between items-center slide-in hover:bg-white/5 transition';
+        div.style.animationDelay = `${index * 50}ms`;
+        div.innerHTML = `
+          <div>
+            <p class="font-bold">${symbol}</p>
+            <p class="text-gray-400 text-sm">${stock.name}</p>
+          </div>
+          <div class="text-right">
+            <p class="mono font-bold">$${currentPrice}</p>
+            <p class="text-sm ${isUp ? 'stock-up' : 'stock-down'}">
+              ${isUp ? '▲' : '▼'} ${Math.abs(change).toFixed(2)} (${isUp ? '+' : ''}${((change / currentPrice) * 100).toFixed(2)}%)
+            </p>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function searchStock() {
+      const symbol = document.getElementById('stock-search').value.toUpperCase().trim();
+      const resultDiv = document.getElementById('search-result');
+      
+      if (!symbol) {
+        resultDiv.innerHTML = '<p class="text-yellow-400 text-sm">Bitte Symbol eingeben</p>';
+        return;
+      }
+      
+      if (stockData[symbol]) {
+        const stock = stockData[symbol];
+        const isUp = stock.change >= 0;
+        resultDiv.innerHTML = `
+          <div class="glass rounded-xl p-4 slide-in">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="font-bold text-lg">${symbol}</p>
+                <p class="text-gray-400 text-sm">${stock.name}</p>
+              </div>
+              <div class="text-right">
+                <p class="mono font-bold text-2xl">$${stock.price.toFixed(2)}</p>
+                <p class="${isUp ? 'stock-up' : 'stock-down'}">
+                  ${isUp ? '▲' : '▼'} ${Math.abs(stock.change).toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        resultDiv.innerHTML = `<p class="text-red-400 text-sm">Symbol nicht gefunden</p>`;
+      }
+    }
+
+    // Currency conversion
+    const exchangeRates = {
+      EUR: { USD: 1.085, GBP: 0.855, CHF: 0.945, JPY: 162.5, CAD: 1.46, AUD: 1.65, SEK: 10.2, NOK: 11.5, EUR: 1 },
+      USD: { EUR: 0.922, GBP: 0.788, CHF: 0.871, JPY: 149.8, CAD: 1.345, AUD: 1.52, SEK: 9.4, NOK: 10.6, USD: 1 },
+      GBP: { EUR: 1.170, USD: 1.269, CHF: 1.105, JPY: 190.2, CAD: 1.705, AUD: 1.93, SEK: 11.93, NOK: 13.45, GBP: 1 },
+      CHF: { EUR: 1.058, USD: 1.148, GBP: 0.905, JPY: 172.0, CAD: 1.54, AUD: 1.745, SEK: 10.8, NOK: 12.17, CHF: 1 },
+      JPY: { EUR: 0.00615, USD: 0.00668, GBP: 0.00526, CHF: 0.00581, CAD: 0.00896, AUD: 0.0101, SEK: 0.0628, NOK: 0.0707, JPY: 1 },
+      CAD: { EUR: 0.685, USD: 0.743, GBP: 0.586, CHF: 0.649, JPY: 111.5, AUD: 1.15, SEK: 7.01, NOK: 7.88, CAD: 1 },
+      AUD: { EUR: 0.595, USD: 0.645, GBP: 0.518, CHF: 0.573, JPY: 98.2, CAD: 0.87, SEK: 6.09, NOK: 6.86, AUD: 1 },
+      SEK: { EUR: 0.098, USD: 0.106, GBP: 0.084, CHF: 0.093, JPY: 15.9, CAD: 0.143, AUD: 0.164, NOK: 1.125, SEK: 1 },
+      NOK: { EUR: 0.087, USD: 0.094, GBP: 0.074, CHF: 0.082, JPY: 14.2, CAD: 0.127, AUD: 0.146, SEK: 0.889, NOK: 1 }
+    };
+
+    function convertCurrency() {
+      const amount = parseFloat(document.getElementById('currency-amount').value) || 0;
+      const from = document.getElementById('currency-from').value;
+      const to = document.getElementById('currency-to').value;
+      
+      const rate = exchangeRates[from][to];
+      const result = amount * rate;
+      
+      document.getElementById('currency-result').textContent = `${result.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${to}`;
+      document.getElementById('currency-rate').textContent = `1 ${from} = ${rate.toFixed(4)} ${to}`;
+    }
+
+    function swapCurrencies() {
+      const fromSelect = document.getElementById('currency-from');
+      const toSelect = document.getElementById('currency-to');
+      const temp = fromSelect.value;
+      fromSelect.value = toSelect.value;
+      toSelect.value = temp;
+      convertCurrency();
+    }
+
+    // Unit conversion
+    const unitOptions = {
+      length: [
+        { value: 'm', label: 'Meter (m)' },
+        { value: 'cm', label: 'Zentimeter (cm)' },
+        { value: 'mm', label: 'Millimeter (mm)' },
+        { value: 'km', label: 'Kilometer (km)' },
+        { value: 'in', label: 'Zoll (in)' },
+        { value: 'ft', label: 'Fuß (ft)' },
+        { value: 'mi', label: 'Meilen (mi)' },
+        { value: 'yd', label: 'Yards (yd)' }
+      ],
+      weight: [
+        { value: 'kg', label: 'Kilogramm (kg)' },
+        { value: 'g', label: 'Gramm (g)' },
+        { value: 'mg', label: 'Milligramm (mg)' },
+        { value: 'lb', label: 'Pfund (lb)' },
+        { value: 'oz', label: 'Unzen (oz)' },
+        { value: 't', label: 'Tonnen (t)' }
+      ],
+      temperature: [
+        { value: 'c', label: 'Celsius (°C)' },
+        { value: 'f', label: 'Fahrenheit (°F)' },
+        { value: 'k', label: 'Kelvin (K)' }
+      ],
+      area: [
+        { value: 'm2', label: 'Quadratmeter (m²)' },
+        { value: 'km2', label: 'Quadratkilometer (km²)' },
+        { value: 'ha', label: 'Hektar (ha)' },
+        { value: 'ft2', label: 'Quadratfuß (ft²)' },
+        { value: 'ac', label: 'Acre (ac)' }
+      ],
+      volume: [
+        { value: 'l', label: 'Liter (l)' },
+        { value: 'ml', label: 'Milliliter (ml)' },
+        { value: 'm3', label: 'Kubikmeter (m³)' },
+        { value: 'gal', label: 'Gallonen (gal)' },
+        { value: 'cup', label: 'Tassen (cup)' },
+        { value: 'fl_oz', label: 'Flüssigkeitsunzen' }
+      ],
+      speed: [
+        { value: 'kmh', label: 'Kilometer/Stunde' },
+        { value: 'ms', label: 'Meter/Sekunde' },
+        { value: 'mph', label: 'Meilen/Stunde' },
+        { value: 'kn', label: 'Knoten' }
+      ],
+      energy: [
+        { value: 'j', label: 'Joule (J)' },
+        { value: 'kj', label: 'Kilojoule (kJ)' },
+        { value: 'cal', label: 'Kalorien (cal)' },
+        { value: 'kcal', label: 'Kilokalorien (kcal)' },
+        { value: 'kwh', label: 'Kilowattstunden (kWh)' }
+      ]
+    };
+
+    const conversionFactors = {
+      length: { m: 1, cm: 100, mm: 1000, km: 0.001, in: 39.3701, ft: 3.28084, mi: 0.000621371, yd: 1.09361 },
+      weight: { kg: 1, g: 1000, mg: 1000000, lb: 2.20462, oz: 35.274, t: 0.001 },
+      area: { m2: 1, km2: 0.000001, ha: 0.0001, ft2: 10.7639, ac: 0.000247105 },
+      volume: { l: 1, ml: 1000, m3: 0.001, gal: 0.264172, cup: 4.22675, fl_oz: 33.814 },
+      speed: { kmh: 1, ms: 0.2778, mph: 0.621371, kn: 0.539957 },
+      energy: { j: 1, kj: 0.001, cal: 0.239, kcal: 0.000239, kwh: 0.000000278 }
+    };
+
+    function updateUnitOptions() {
+      const category = document.getElementById('unit-category').value;
+      const options = unitOptions[category];
+      
+      const fromSelect = document.getElementById('unit-from');
+      const toSelect = document.getElementById('unit-to');
+      
+      fromSelect.innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+      toSelect.innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+      
+      if (options.length > 1) toSelect.selectedIndex = 1;
+      
+      convertUnits();
+    }
+
+    function convertUnits() {
+      const category = document.getElementById('unit-category').value;
+      const value = parseFloat(document.getElementById('unit-value').value) || 0;
+      const from = document.getElementById('unit-from').value;
+      const to = document.getElementById('unit-to').value;
+      
+      let result;
+      
+      if (category === 'temperature') {
+        let celsius;
+        if (from === 'c') celsius = value;
+        else if (from === 'f') celsius = (value - 32) * 5/9;
+        else celsius = value - 273.15;
+        
+        if (to === 'c') result = celsius;
+        else if (to === 'f') result = celsius * 9/5 + 32;
+        else result = celsius + 273.15;
+      } else {
+        const factors = conversionFactors[category];
+        const baseValue = value / factors[from];
+        result = baseValue * factors[to];
+      }
+      
+      const unitLabel = unitOptions[category].find(o => o.value === to)?.label.split(' ')[0] || to;
+      document.getElementById('unit-result').textContent = `${result.toLocaleString('de-DE', { maximumFractionDigits: 4 })} ${unitLabel}`;
+    }
+
+    // Crypto data
+    const cryptoData = {
+      'BTC': { name: 'Bitcoin', price: 47500, change: 5.23, usd: 47500 },
+      'ETH': { name: 'Ethereum', price: 2800, change: -2.15, usd: 2800 },
+      'XRP': { name: 'Ripple', price: 0.52, change: 8.45, usd: 0.52 },
+      'ADA': { name: 'Cardano', price: 0.98, change: -1.32, usd: 0.98 }
+    };
+
+    function refreshCrypto() {
+      const container = document.getElementById('crypto-list');
+      container.innerHTML = '';
+      
+      Object.entries(cryptoData).forEach(([symbol, crypto], index) => {
+        const isUp = crypto.change >= 0;
+        const div = document.createElement('div');
+        div.className = 'glass rounded-xl p-4 flex justify-between items-center slide-in hover:bg-white/5 transition';
+        div.style.animationDelay = `${index * 50}ms`;
+        div.innerHTML = `
+          <div>
+            <p class="font-bold">${symbol}</p>
+            <p class="text-gray-400 text-sm">${crypto.name}</p>
+          </div>
+          <div class="text-right">
+            <p class="mono font-bold">$${crypto.price.toLocaleString('de-DE', { maximumFractionDigits: 2 })}</p>
+            <p class="text-sm ${isUp ? 'stock-up' : 'stock-down'}">
+              ${isUp ? '▲' : '▼'} ${Math.abs(crypto.change).toFixed(2)}%
+            </p>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function convertCrypto() {
+      const amount = parseFloat(document.getElementById('crypto-amount').value) || 0;
+      const from = document.getElementById('crypto-from').value;
+      const to = document.getElementById('crypto-to').value;
+      
+      const crypto = cryptoData[from];
+      if (!crypto) return;
+      
+      let result;
+      if (to === 'USD' || to === 'EUR') {
+        result = amount * crypto.price * (to === 'EUR' ? 0.922 : 1);
+      } else {
+        const toCrypto = cryptoData[to];
+        result = (amount * crypto.price) / toCrypto.price;
+      }
+      
+      const toLabel = to === 'USD' || to === 'EUR' ? to : cryptoData[to]?.name || to;
+      document.getElementById('crypto-result').textContent = `${result.toLocaleString('de-DE', { maximumFractionDigits: 2 })} ${to === 'USD' ? '$' : to === 'EUR' ? '€' : to}`;
+    }
+
+    // Calculator variables
+    let calcDisplay = '0';
+    let calcValue = '';
+    let calcCurrentOp = '';
+    let calcWaitingForNewValue = false;
+
+    function updateCalcDisplay() {
+      document.getElementById('calc-display').textContent = calcDisplay;
+    }
+
+    function calcNumber(num) {
+      if (calcWaitingForNewValue) {
+        calcDisplay = num;
+        calcWaitingForNewValue = false;
+      } else {
+        calcDisplay = calcDisplay === '0' ? num : calcDisplay + num;
+      }
+      updateCalcDisplay();
+    }
+
+    function calcOperate(op) {
+      const currentValue = parseFloat(calcDisplay);
+      
+      if (calcValue === '') {
+        calcValue = currentValue;
+      } else if (calcCurrentOp) {
+        const result = performCalc(calcValue, currentValue, calcCurrentOp);
+        calcDisplay = result.toString();
+        calcValue = result;
+      }
+      
+      calcCurrentOp = op;
+      calcWaitingForNewValue = true;
+    }
+
+    function performCalc(val1, val2, op) {
+      switch(op) {
+        case '+': return val1 + val2;
+        case '-': return val1 - val2;
+        case '*': return val1 * val2;
+        case '/': return val1 / val2;
+        default: return val2;
+      }
+    }
+
+    function calcEquals() {
+      if (calcCurrentOp === '' || calcValue === '') return;
+      
+      const currentValue = parseFloat(calcDisplay);
+      const result = performCalc(calcValue, currentValue, calcCurrentOp);
+      calcDisplay = result.toString();
+      calcValue = '';
+      calcCurrentOp = '';
+      calcWaitingForNewValue = true;
+      updateCalcDisplay();
+    }
+
+    function calcClear() {
+      calcDisplay = '0';
+      calcValue = '';
+      calcCurrentOp = '';
+      calcWaitingForNewValue = false;
+      updateCalcDisplay();
+    }
+
+    function calcDelete() {
+      if (calcDisplay.length > 1) {
+        calcDisplay = calcDisplay.slice(0, -1);
+      } else {
+        calcDisplay = '0';
+      }
+      updateCalcDisplay();
+    }
+
+    function calcPercent() {
+      calcDisplay = (parseFloat(calcDisplay) / 100).toString();
+      updateCalcDisplay();
+    }
+
+    function calcFunction(fn) {
+      const num = parseFloat(calcDisplay);
+      let result;
+      
+      switch(fn) {
+        case 'sqrt': result = Math.sqrt(num); break;
+        case 'pow': result = num * num; break;
+        case 'pow3': result = num * num * num; break;
+        case 'sin': result = Math.sin(num * Math.PI / 180); break;
+        case 'cos': result = Math.cos(num * Math.PI / 180); break;
+        case 'tan': result = Math.tan(num * Math.PI / 180); break;
+        case 'log': result = Math.log10(num); break;
+        case 'pi': result = Math.PI; break;
+        default: result = num;
+      }
+      
+      calcDisplay = result.toFixed(4);
+      calcWaitingForNewValue = true;
+      updateCalcDisplay();
+    }
+
+    // Tools functions
+    function calculateBMI() {
+      const height = parseFloat(document.getElementById('bmi-height').value) || 0;
+      const weight = parseFloat(document.getElementById('bmi-weight').value) || 0;
+      
+      if (height <= 0 || weight <= 0) return;
+      
+      const heightM = height / 100;
+      const bmi = weight / (heightM * heightM);
+      
+      let category;
+      if (bmi < 18.5) category = 'Untergewicht';
+      else if (bmi < 25) category = 'Normalgewicht';
+      else if (bmi < 30) category = 'Übergewicht';
+      else category = 'Adipositas';
+      
+      document.getElementById('bmi-result').textContent = bmi.toFixed(1);
+      document.getElementById('bmi-category').textContent = category;
+    }
+
+    function calculateInterest() {
+      const principal = parseFloat(document.getElementById('interest-principal').value) || 0;
+      const rate = parseFloat(document.getElementById('interest-rate').value) || 0;
+      const years = parseFloat(document.getElementById('interest-years').value) || 0;
+      
+      const result = principal * Math.pow(1 + rate / 100, years);
+      document.getElementById('interest-result').textContent = result.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' €';
+    }
+
+    function calculatePercent() {
+      const value = parseFloat(document.getElementById('percent-value').value) || 0;
+      const percent = parseFloat(document.getElementById('percent-percent').value) || 0;
+      
+      const result = value * (percent / 100);
+      document.getElementById('percent-result').textContent = result.toLocaleString('de-DE', { maximumFractionDigits: 2 });
+    }
+
+    function convertTimezone() {
+      const tzFrom = parseInt(document.getElementById('tz-from').value);
+      const tzTo = parseInt(document.getElementById('tz-to').value);
+      const diff = tzTo - tzFrom;
+      
+      const now = new Date();
+      now.setHours(now.getHours() + diff);
+      
+      const timeString = now.toLocaleTimeString('de-DE');
+      document.getElementById('tz-result').innerHTML = `
+        <p class="text-gray-400 text-sm">Zeitdifferenz: <span class="text-cyan-400 font-bold">${diff > 0 ? '+' : ''}${diff} Stunden</span></p>
+        <p class="text-cyan-400 font-bold text-lg mt-2">${timeString}</p>
+      `;
+    }
+
+    // Initialize on load
+    window.addEventListener('load', () => {
+      refreshStocks();
+      convertCurrency();
+      updateUnitOptions();
+      refreshCrypto();
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cdbf973775bdc95',t:'MTc3MTA2NTkxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
